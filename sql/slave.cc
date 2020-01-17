@@ -1443,6 +1443,9 @@ void slave_prepare_for_shutdown()
   mysql_mutex_lock(&LOCK_active_mi);
   master_info_index->free_connections();
   mysql_mutex_unlock(&LOCK_active_mi);
+  // It's safe to destruct worker pool now when
+  // all driver threads are gone.
+  global_rpl_thread_pool.destroy();
   stop_slave_background_thread();
 }
 
@@ -1474,9 +1477,6 @@ void end_slave()
   active_mi= 0;
   mysql_mutex_unlock(&LOCK_active_mi);
 
-  stop_slave_background_thread();
-
-  global_rpl_thread_pool.destroy();
   free_all_rpl_filters();
   DBUG_VOID_RETURN;
 }
